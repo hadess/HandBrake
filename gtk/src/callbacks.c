@@ -4987,7 +4987,28 @@ ghb_is_cd(GDrive *gd)
 
     return FALSE;
 #else
-    return FALSE;
+    GIcon *gicon;
+    gboolean ret = FALSE;
+    char **names, **iter;
+
+    if (!g_drive_is_media_removable (gd))
+        return ret;
+
+    gicon = g_drive_get_icon (gd);
+    if (!gicon)
+        return ret;
+    if (!G_IS_THEMED_ICON (icon))
+    {
+        g_object_unref (gicon);
+        return ret;
+    }
+
+    g_object_get (icon, "names", &names, NULL);
+    ret = g_strv_contains (names, "drive-optical");
+    g_strfreev (names);
+    g_object_unref (gicon);
+
+    return ret;
 #endif
 }
 
