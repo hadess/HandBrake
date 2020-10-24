@@ -38,10 +38,6 @@
 
 #if !defined(_WIN32)
 #include <poll.h>
-#define G_UDEV_API_IS_SUBJECT_TO_CHANGE 1
-#if defined(__linux__) && defined(_HAVE_GUDEV)
-#include <gudev/gudev.h>
-#endif
 
 #if defined( __FreeBSD__ )
 #include <sys/socket.h>
@@ -4952,41 +4948,9 @@ dvd_device_list()
     return dvd_devices;
 }
 
-#if defined(__linux__) && defined(_HAVE_GUDEV)
-static GUdevClient *udev_ctx = NULL;
-#endif
-
 gboolean
 ghb_is_cd(GDrive *gd)
 {
-#if defined(__linux__) && defined(_HAVE_GUDEV)
-    gchar *device;
-    GUdevDevice *udd;
-
-    if (udev_ctx == NULL)
-        return FALSE;
-
-    device = g_drive_get_identifier(gd, G_VOLUME_IDENTIFIER_KIND_UNIX_DEVICE);
-    if (device == NULL)
-        return FALSE;
-
-    udd = g_udev_client_query_by_device_file(udev_ctx, device);
-    if (udd == NULL)
-    {
-        g_message("udev: Failed to lookup device %s", device);
-        g_free(device);
-        return FALSE;
-    }
-    g_free(device);
-
-    gint val;
-    val = g_udev_device_get_property_as_int(udd, "ID_CDROM_DVD");
-    g_object_unref(udd);
-    if (val == 1)
-        return TRUE;
-
-    return FALSE;
-#else
     GIcon *gicon;
     gboolean ret = FALSE;
     char **names, **iter;
@@ -5009,15 +4973,6 @@ ghb_is_cd(GDrive *gd)
     g_object_unref (gicon);
 
     return ret;
-#endif
-}
-
-void
-ghb_udev_init()
-{
-#if defined(__linux__) && defined(_HAVE_GUDEV)
-    udev_ctx = g_udev_client_new(NULL);
-#endif
 }
 
 #if defined(_WIN32)
